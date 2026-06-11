@@ -109,3 +109,4 @@ Get an API key from the Claude Console:
 
 The endpoint defaults to Claude Haiku 4.5 (cheap and fast for card generation); you
 can bump it to Sonnet in [app/ai.py](app/ai.py) for richer cards.
+Branch A change 1
