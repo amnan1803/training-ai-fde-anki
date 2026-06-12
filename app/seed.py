@@ -48,6 +48,7 @@ GLOSSARY_CARDS = [
 ]
 
 
+# Manually sets the next due date for a card — used to simulate overdue and future cards.
 def _set_next_due(card_id: int, next_due: str) -> None:
     with db.connect() as conn:
         conn.execute(
@@ -55,8 +56,8 @@ def _set_next_due(card_id: int, next_due: str) -> None:
         )
 
 
+# Fills the database with sample data, but only if it's completely empty.
 def seed_if_empty() -> None:
-    """Seed sample decks/cards/reviews only when the database has no decks yet."""
     with db.connect() as conn:
         existing = conn.execute("SELECT COUNT(*) AS n FROM decks").fetchone()["n"]
     if existing:
@@ -64,6 +65,7 @@ def seed_if_empty() -> None:
     seed()
 
 
+# Creates two sample decks with cards and reviews so the app has something to show on first run.
 def seed() -> None:
     today = date.today()
     yesterday = (today - timedelta(days=1)).isoformat()

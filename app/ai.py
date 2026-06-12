@@ -51,12 +51,13 @@ _CARD_TOOL = {
 }
 
 
+# A custom error we raise when no API key is set, so the route can return a clean 503 instead of crashing.
 class AINotConfigured(RuntimeError):
-    """Raised when no ANTHROPIC_API_KEY is available."""
+    pass
 
 
+# Asks Claude to generate a given number of flashcards about a topic and returns them as a list.
 def generate_cards(topic: str, n: int) -> list[dict]:
-    """Draft ``n`` flashcards about ``topic``. Each card is a {front, back} dict."""
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise AINotConfigured("AI not configured — set ANTHROPIC_API_KEY")
 

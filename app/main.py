@@ -20,6 +20,7 @@ from .routes import router
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
+# Runs once when the server starts: sets up the database tables and adds sample data if it's a fresh start.
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init_db()
@@ -31,7 +32,7 @@ app = FastAPI(title="AI Anki", version="0.1.0", lifespan=lifespan)
 app.include_router(router)
 
 
+# Serves the web UI when you open the app in a browser.
 @app.get("/", include_in_schema=False)
 def index() -> FileResponse:
-    """Serve the minimal web UI. The API itself is documented at /docs."""
     return FileResponse(STATIC_DIR / "index.html")
