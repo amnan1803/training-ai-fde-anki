@@ -15,11 +15,12 @@ ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_PATH = ROOT / "data" / "schema.sql"
 
 
+# Returns the file path where the database is stored. Tests swap this out for a temporary file.
 def db_path() -> str:
-    """Path to the SQLite file. Overridable via ANKI_DB_PATH (used by tests)."""
     return os.environ.get("ANKI_DB_PATH", str(ROOT / "anki.db"))
 
 
+# Opens a connection to the database so other functions can run queries against it.
 def connect() -> sqlite3.Connection:
     conn = sqlite3.connect(db_path())
     conn.row_factory = sqlite3.Row
@@ -27,8 +28,8 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
+# Creates the database tables on first run by reading the SQL file in the data folder.
 def init_db() -> None:
-    """Create the tables if they don't exist by running data/schema.sql."""
     schema = SCHEMA_PATH.read_text()
     with connect() as conn:
         conn.executescript(schema)
@@ -37,6 +38,7 @@ def init_db() -> None:
 # --- decks -----------------------------------------------------------------
 
 
+# Saves a new deck with the given name to the database and returns it.
 def insert_deck(name: str) -> dict:
     with connect() as conn:
         cur = conn.execute("INSERT INTO decks (name) VALUES (?)", (name,))
@@ -44,12 +46,14 @@ def insert_deck(name: str) -> dict:
     return get_deck(deck_id)
 
 
+# Looks up one deck by its ID and returns it, or returns nothing if it doesn't exist.
 def get_deck(deck_id: int) -> dict | None:
     with connect() as conn:
         row = conn.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
     return dict(row) if row else None
 
 
+# Returns every deck in the database in the order they were created.
 def all_decks() -> list[dict]:
     with connect() as conn:
         rows = conn.execute("SELECT * FROM decks ORDER BY id").fetchall()
@@ -59,6 +63,7 @@ def all_decks() -> list[dict]:
 # --- cards -----------------------------------------------------------------
 
 
+# Saves a new flashcard (front and back text) into a deck and returns it.
 def insert_card(deck_id: int, front: str, back: str) -> dict:
     with connect() as conn:
         cur = conn.execute(
@@ -69,12 +74,14 @@ def insert_card(deck_id: int, front: str, back: str) -> dict:
     return get_card(card_id)
 
 
+# Looks up one card by its ID and returns it, or returns nothing if it doesn't exist.
 def get_card(card_id: int) -> dict | None:
     with connect() as conn:
         row = conn.execute("SELECT * FROM cards WHERE id = ?", (card_id,)).fetchone()
     return dict(row) if row else None
 
 
+# Returns all cards that belong to a specific deck, in the order they were created.
 def cards_for_deck(deck_id: int) -> list[dict]:
     with connect() as conn:
         rows = conn.execute(
@@ -83,6 +90,7 @@ def cards_for_deck(deck_id: int) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+# Updates a card's study schedule after a review — saves the new ease, interval, and next due date.
 def update_card_schedule(
     card_id: int, ease: float, interval_days: int, next_due: str
 ) -> dict:
@@ -97,6 +105,7 @@ def update_card_schedule(
 # --- reviews ---------------------------------------------------------------
 
 
+# Saves a record of a card review — what rating was given and whether it was correct.
 def insert_review(card_id: int, rating: str, correct: int) -> dict:
     with connect() as conn:
         cur = conn.execute(
@@ -110,6 +119,7 @@ def insert_review(card_id: int, rating: str, correct: int) -> dict:
     return dict(row)
 
 
+# Returns every review ever done for any card in a given deck, in the order they happened.
 def reviews_for_deck(deck_id: int) -> list[dict]:
     with connect() as conn:
         rows = conn.execute(
