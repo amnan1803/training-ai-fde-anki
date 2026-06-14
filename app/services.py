@@ -29,7 +29,7 @@ def schedule_next(rating: str, interval: int, ease: float) -> tuple[int, float]:
 # Checks whether a card should be shown to the user today — true if its due date is today or has already passed.
 def is_due(card: dict, today: str | None = None) -> bool:
     today = today or date.today().isoformat()
-    return card["next_due"] >= today
+    return card["next_due"] <= today
 
 
 # Records how you rated a card, then reschedules it so it comes back at the right time.
@@ -54,7 +54,7 @@ def deck_stats(deck_id: int) -> dict:
     cards = db.cards_for_deck(deck_id)
     reviews = db.reviews_for_deck(deck_id)
     correct = sum(r["correct"] for r in reviews)
-    retention = correct / len(reviews)
+    retention = correct / len(reviews) if reviews else 0.0
     due = [c for c in cards if is_due(c)]
     return {
         "total_cards": len(cards),

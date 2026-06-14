@@ -81,3 +81,24 @@ def test_generate_without_key_returns_503(client, monkeypatch):
     res = client.post("/decks/1/generate", json={"topic": "colors", "count": 3})
     assert res.status_code == 503
     assert res.json()["detail"] == "AI not configured — set ANTHROPIC_API_KEY"
+
+
+def test_due_excludes_future_cards(client):
+    # The seed gives card 1 (LLM) a due date of yesterday and card 2 (RAG) a due
+    # date of tomorrow. Only the overdue card should appear — not the future one.
+    res = client.get("/decks/1/due")
+    assert res.status_code == 200
+    fronts = [c["front"] for c in res.json()]
+    assert "LLM" in fronts      # overdue — must be included
+    assert "RAG" not in fronts  # future — must be excluded
+
+
+def test_stats_on_empty_deck_returns_zero_retention(client):
+    # Deck 2 has no cards and no reviews. Before the fix this crashed with
+    # ZeroDivisionError and returned a 500. Now it should return 200 with 0.0.
+    res = client.get("/decks/2/stats")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["total_cards"] == 0
+    assert body["reviews_done"] == 0
+    assert body["retention"] == 0.0

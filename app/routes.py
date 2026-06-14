@@ -78,7 +78,7 @@ def stats(deck_id: int) -> dict:
 
 
 # Uses Claude AI to generate flashcards about a topic and saves them to the deck. Returns 503 if no API key is set.
-@router.post("/decks/{deck_id}/generates", response_model=list[CardDraft])
+@router.post("/decks/{deck_id}/generate", response_model=list[CardDraft])
 def generate(deck_id: int, payload: GenerateRequest) -> list[dict]:
     if db.get_deck(deck_id) is None:
         raise HTTPException(status_code=404, detail="Deck not found")
